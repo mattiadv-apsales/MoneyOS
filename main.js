@@ -1,5 +1,6 @@
 const readline = require('readline');
 const fs = require("fs");
+const path = require("path");
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -7,9 +8,18 @@ const rl = readline.createInterface({
 })
 
 function main() {
+    let history = [];
+
     function loop() {
-        rl.question(process.cwd() + " > ", (input) => {
+
+        let before = process.cwd();
+        let response = "MoneyOS";
+
+        rl.question(before + " > ", (input) => {
             input = input.trim().toLowerCase();
+            if (input != "history") {
+                history.push(input);
+            }
 
             if (!input) {
                 loop();
@@ -22,7 +32,7 @@ function main() {
 
             switch (cmd) {
                 case "hello":
-                    console.log(process.cwd() + " > Hello mate")
+                    console.log(response + " > Hello mate")
                     loop()
                     return;
 
@@ -30,7 +40,7 @@ function main() {
                     let deld = args[0];
 
                     if (!deld) {
-                        console.log(process.cwd() + " > Insert a name for delete a dir")
+                        console.log(response + " > Insert a name for delete a dir")
                         loop();
                         return;
                     }
@@ -40,7 +50,7 @@ function main() {
                         loop();
                         return;
                     } catch(err) {
-                        console.log(process.cwd() + " > Error: " + err);
+                        console.log(response + " > Error: " + err);
                         loop();
                         return;
                     }
@@ -50,17 +60,22 @@ function main() {
                     let destination = args[1]
 
                     if (!source || !destination) {
-                        console.log(process.cwd() + " > Insert a valid source or destination!");
+                        console.log(response + " > Insert a valid source or destination!");
                         loop();
                         return;
                     }
 
                     try {
+                        if (fs.existsSync(destination) && fs.statSync(destination).isDirectory()) {
+                            let filename = path.basename(source);
+                            destination = path.join(destination, filename);
+                        }
+
                         fs.renameSync(source, destination);
                         loop();
                         return;
                     } catch(err) {
-                        console.log(process.cwd() + " > Error: " + err);
+                        console.log(response + " > Error: " + err);
                         loop();
                         return;
                     }
@@ -69,7 +84,7 @@ function main() {
                     let tar = args[0];
 
                     if (!tar) {
-                        console.log(process.cwd() + " > Insert a name for create a new dir")
+                        console.log(response + " > Insert a name for create a new dir")
                         loop();
                         return;
                     }
@@ -79,7 +94,7 @@ function main() {
                         loop();
                         return;
                     } catch(err) {
-                        console.log(process.cwd() + " > Error: " + err);
+                        console.log(response + " > Error: " + err);
                         loop();
                         return;
                     }
@@ -88,7 +103,7 @@ function main() {
                     let target = args[0]; 
 
                     if (!target) {
-                        console.log(process.cwd() + " > Specify a directory!");
+                        console.log(response + " > Specify a directory!");
                         loop();
                         return;
                     }
@@ -98,7 +113,7 @@ function main() {
                         loop();
                         return;
                     } catch(err) {
-                        console.log(process.cwd() + " > Error: " + err);
+                        console.log(response + " > Error: " + err);
                         loop();
                         return;
                     }
@@ -107,7 +122,7 @@ function main() {
                     let mkfil = args[0]; 
 
                     if (!mkfil) {
-                        console.log(process.cwd() + " > Specify a filename!");
+                        console.log(response + " > Specify a filename!");
                         loop();
                         return;
                     }
@@ -117,7 +132,7 @@ function main() {
                         loop();
                         return;
                     } catch(err) {
-                        console.log(process.cwd() + " > Error: " + err);
+                        console.log(response + " > Error: " + err);
                         loop();
                         return;
                     }
@@ -126,7 +141,7 @@ function main() {
                     let delfil = args[0]; 
 
                     if (!delfil) {
-                        console.log(process.cwd() + " > Specify a filename!");
+                        console.log(response + " > Specify a filename!");
                         loop();
                         return;
                     }
@@ -136,7 +151,7 @@ function main() {
                         loop();
                         return;
                     } catch(err) {
-                        console.log(process.cwd() + " > Error: " + err);
+                        console.log(response + " > Error: " + err);
                         loop();
                         return;
                     }
@@ -144,7 +159,7 @@ function main() {
                 case "ls":
                     fs.readdir(process.cwd(), (err, files) => {
                         if (err) {
-                            console.error(process.cwd() + " > Error: " + err)
+                            console.error(response + " > Error: " + err)
                             loop();
                             return;
                         }
@@ -152,13 +167,86 @@ function main() {
                         loop();
                         return;
                     })
-                    loop();
                     return;
 
                 case "exit":
-                    console.log(process.cwd() + " > Goodbye mate <3")
+                    console.log(response + " > Goodbye mate <3")
                     rl.close();
                     return
+
+                case "cls":
+                    for (let x = 0; x < 50; x++) {
+                        console.log();
+                    }
+                    loop();
+                    return;
+
+                case "history":
+                    for (let c of history) {
+                        console.log(response + " > " + c);
+                    }
+                    loop();
+                    return;
+
+                case "write":
+                    let filen = args[0];
+                    let text = args.slice(1).join(" ");
+
+                    if (!filen || !text) {
+                        console.log(response + " > Insert a valid filename and text");
+                        loop();
+                        return;
+                    }
+
+                    try {
+                        fs.writeFileSync(filen, text, { flag: "a" });
+                        console.log(response + " > Text written successfully!");
+                        loop();
+                        return;
+                    } catch(err) {
+                        console.error(response + " > Error: " + err);
+                        loop();
+                        return;
+                    }
+
+                case "cat":
+                    let catFile = args[0];
+
+                    if (!catFile) {
+                        console.log(response + " > Specify a filename!");
+                        loop();
+                        return;
+                    }
+
+                    try {
+                        let content = fs.readFileSync(catFile, "utf-8");
+                        console.log(content);
+                        loop();
+                        return;
+                    } catch(err) {
+                        console.log(response + " > Error: " + err);
+                        loop();
+                        return;
+                    }
+
+                case "open":
+                    let openFile = args[0]; 
+
+                    if (!openFile) {
+                        console.log(response + " > Specify a filename!");
+                        loop();
+                        return;
+                    }
+
+                    try {
+                        fs.openSync(openFile);
+                        loop();
+                        return;
+                    } catch(err) {
+                        console.log(response + " > Error: " + err);
+                        loop();
+                        return;
+                    }
 
                 case "help":
                     console.log("Help -> All commands shown")
@@ -170,11 +258,16 @@ function main() {
                     console.log("mkfile -> create a new file with mkfile <filename>")
                     console.log("delfile -> delete a file with delfile <filename>")
                     console.log("mv -> mv for move file with mv <filename> <destination/filename>")
+                    console.log("cls -> cls for clear the prompt")
+                    console.log("history -> for view all history of command you used")
+                    console.log("open -> for open a file with open <filename>")
+                    console.log("cat -> for view the content of a file with cat <filename>")
+                    console.log("write -> for write on a file with write <filename> <text>")
                     console.log("exit -> for close the OS")
                     loop()
                     return;
                 default:
-                    console.log(process.cwd() + " > Unknown command, try a correct command or write 'help'")
+                    console.log(before + " > Unknown command, try a correct command or write 'help'")
                     loop()
                     return;
             }
