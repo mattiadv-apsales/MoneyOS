@@ -45,6 +45,26 @@ function main() {
                         return;
                     }
 
+                case "mv":
+                    let source = args[0];
+                    let destination = args[1]
+
+                    if (!source || !destination) {
+                        console.log(process.cwd() + " > Insert a valid source or destination!");
+                        loop();
+                        return;
+                    }
+
+                    try {
+                        fs.renameSync(source, destination);
+                        loop();
+                        return;
+                    } catch(err) {
+                        console.log(process.cwd() + " > Error: " + err);
+                        loop();
+                        return;
+                    }
+
                 case "mkdir":
                     let tar = args[0];
 
@@ -149,6 +169,7 @@ function main() {
                     console.log("deldir -> delete a dir with deldir <dirname>")
                     console.log("mkfile -> create a new file with mkfile <filename>")
                     console.log("delfile -> delete a file with delfile <filename>")
+                    console.log("mv -> mv for move file with mv <filename> <destination/filename>")
                     console.log("exit -> for close the OS")
                     loop()
                     return;
