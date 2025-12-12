@@ -160,7 +160,7 @@ def init_game():
             button_restart.place(relx=0.5, rely=0.7, anchor="center")
             enemy_win()
 
-        if mosse.mosse >= 20:
+        if mosse.mosse >= 500:
             giocatore.punti += 1
             print("Il comunista non ha più fiato! COMPLIEMNTI PLAYER HAI VINTO")
             for widget in window.winfo_children():
