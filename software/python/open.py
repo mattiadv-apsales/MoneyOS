@@ -50,11 +50,13 @@ running = True
 sound_player = False
 win_assigned = False
 sound_step = False
+start_sound = False
+fascio_in_zone = False
 
 speed_flags = {10: False, 20: False, 30: False, 40: False, 50: False}
 speed_values = {10:0.2, 20:0.3, 30:0.5, 40:0.7, 50:1.0}
 
-font = pygame.font.SysFont(None, 20)
+font = pygame.font.SysFont(None, 30)
 big_font = pygame.font.SysFont(None, 40)
 winner_text = "Complimenti fascio, sei scappato!"
 winning_stat = font.render(f"Fascio win: {fascio.win}, Comuni win: {comuni.win}", True, text_color)
@@ -67,6 +69,9 @@ def winner_fascio():
 
 def winner_comuni():
     winsound.PlaySound("winner_enemy.wav", winsound.SND_ASYNC)
+
+def in_the_zone():
+    winsound.PlaySound("dentro.wav", winsound.SND_ASYNC)
 
 def increment_speed_sound():
     winsound.PlaySound("pop.wav", winsound.SND_ASYNC)
@@ -120,6 +125,21 @@ def reset_game():
     win_assigned = False
     winsound.PlaySound(None, winsound.SND_PURGE)
 
+area1 = pygame.image.load("area1.png").convert_alpha()
+area1 = pygame.transform.scale(area1, (fascio_zone.width, fascio_zone.height))
+
+area2 = pygame.image.load("area2.png").convert_alpha()
+area2 = pygame.transform.scale(area2, (comuni_zone.width, comuni_zone.height))
+
+background_img = pygame.image.load("back.jpg").convert()
+background_img = pygame.transform.scale(background_img, (WIDTH, HEIGHT))
+
+player1 = pygame.image.load("player1.png").convert_alpha()
+player1 = pygame.transform.scale(player1, (40, 40))
+
+player2 = pygame.image.load("player2.png").convert_alpha()
+player2 = pygame.transform.scale(player2, (40, 40))
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -127,13 +147,15 @@ while running:
 
     mouse_pos = pygame.mouse.get_pos()
     mouse_click = pygame.mouse.get_pressed()
+
     screen.fill(background_color)
+    screen.blit(background_img, (0, 0))
 
     if game_over == False:
-        comuni_space = pygame.draw.rect(screen, comuni_zone.color, (comuni_zone.x, comuni_zone.y, comuni_zone.width, comuni_zone.height))
-        fascio_space = pygame.draw.rect(screen, fascio_zone.color, (fascio_zone.x, fascio_zone.y, fascio_zone.width, fascio_zone.height))
-        comuni_rect = pygame.draw.rect(screen, player2_color, (comuni.x, comuni.y, 20, 20))
-        fascio_rect = pygame.draw.rect(screen, player1_color, (fascio.x, fascio.y, 20, 20))
+        comuni_space = screen.blit(area2, (comuni_zone.x, comuni_zone.y))
+        fascio_space = screen.blit(area1, (fascio_zone.x, fascio_zone.y))
+        comuni_rect = screen.blit(player2, (comuni.x, comuni.y))
+        fascio_rect = screen.blit(player1, (fascio.x, fascio.y))
         screen.blit(text_timer, (10, 10))
         screen.blit(text_point, (10, 30))
         screen.blit(winning_stat, (10, 50))
@@ -142,20 +164,20 @@ while running:
 
         if keys[pygame.K_w] and fascio.y > 0:
             fascio.y -= fascio.speed
-        if keys[pygame.K_s] and fascio.y < 480:
+        if keys[pygame.K_s] and fascio.y < 460:
             fascio.y += fascio.speed
         if keys[pygame.K_a] and fascio.x > 0:
             fascio.x -= fascio.speed
-        if keys[pygame.K_d] and fascio.x < 480:
+        if keys[pygame.K_d] and fascio.x < 460:
             fascio.x += fascio.speed
 
         if keys[pygame.K_UP] and comuni.y > 0:
             comuni.y -= comuni.speed
-        if keys[pygame.K_DOWN] and comuni.y < 480:
+        if keys[pygame.K_DOWN] and comuni.y < 460:
             comuni.y += comuni.speed
         if keys[pygame.K_LEFT] and comuni.x > 0:
             comuni.x -= comuni.speed
-        if keys[pygame.K_RIGHT] and comuni.x < 480:
+        if keys[pygame.K_RIGHT] and comuni.x < 460:
             comuni.x += comuni.speed
 
         if fascio_rect.colliderect(comuni_rect):
@@ -177,9 +199,21 @@ while running:
 
         if fascio_rect.colliderect(comuni_space):
             fascio.speed = 0.1
+            if fascio_in_zone == False:
+                in_the_zone()
+                fascio_in_zone = True
 
         if comuni_rect.colliderect(fascio_space):
             comuni.speed = 0.1
+            if start_sound == False:
+                in_the_zone()
+                start_sound = True
+
+        if not comuni_rect.colliderect(fascio_space):
+            start_sound = False
+
+        if not fascio_rect.colliderect(comuni_space):
+            fascio_in_zone = False
 
         if seconds >= 60:
             fascio.point += 1
