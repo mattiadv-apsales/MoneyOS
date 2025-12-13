@@ -11,10 +11,23 @@ class player:
         self.point = 0
         self.morti = 0
         self.speed = 0.1
+        self.base_speed = 0.1
         self.win = 0
+
+class area:
+    def __init__(self, width, height, dimin, x, y, color):
+        self.width = width
+        self.height = height
+        self.dimin = dimin
+        self.x = x
+        self.y = y
+        self.color = color
 
 fascio = player(0, 100, "X")
 comuni = player(250, 250, "O")
+
+fascio_zone = area(200, 200, "comuni", 0, 300, "black")
+comuni_zone = area(200, 200, "fascio", 300, 0, "red")
 
 player1_color = [0, 0, 100]
 player2_color = [100, 0, 0]
@@ -67,7 +80,7 @@ def draw_button(text, x, y, w, h):
     return pygame.Rect(x, y, w, h)
 
 def reset_game_complete():
-    global seconds, fascio, comuni, game_over, sound_player, text_point, win_assigned, player1_color, player2_color
+    global seconds, fascio, comuni, game_over, sound_player, text_point, win_assigned, player1_color, player2_color, speed_flags, speed_values
     seconds = 0
     fascio.x, fascio.y = 0, 100
     comuni.x, comuni.y = 250, 250
@@ -77,25 +90,33 @@ def reset_game_complete():
     comuni.point = 0
     player1_color = [0, 0, 100]
     player2_color = [100, 0, 0]
+    speed_flags = {10: False, 20: False, 30: False, 40: False, 50: False}
+    speed_values = {10:0.2, 20:0.3, 30:0.5, 40:0.7, 50:1.0}
     fascio.morti = 0
     comuni.morti = 0
     comuni.speed = 0.1
     fascio.speed = 0.1
+    fascio.base_speed = 0.1
+    comuni.base_speed = 0.1
     win_assigned = False
     text_point = font.render(f"Fascio: 0/3, Comuni: 0/3", True, text_color)
     winsound.PlaySound(None, winsound.SND_PURGE)
 
 def reset_game():
-    global seconds, fascio, comuni, game_over, sound_player, win_assigned, player1_color, player2_color
+    global seconds, fascio, comuni, game_over, sound_player, win_assigned, player1_color, player2_color, speed_flags, speed_values
     seconds = 0
     player1_color = [0, 0, 100]
     player2_color = [100, 0, 0]
     fascio.x, fascio.y = 0, 100
     comuni.x, comuni.y = 250, 250
+    speed_flags = {10: False, 20: False, 30: False, 40: False, 50: False}
+    speed_values = {10:0.2, 20:0.3, 30:0.5, 40:0.7, 50:1.0}
     game_over = False
     sound_player = False
     comuni.speed = 0.1
     fascio.speed = 0.1
+    fascio.base_speed = 0.1
+    comuni.base_speed = 0.1
     win_assigned = False
     winsound.PlaySound(None, winsound.SND_PURGE)
 
@@ -109,6 +130,8 @@ while running:
     screen.fill(background_color)
 
     if game_over == False:
+        comuni_space = pygame.draw.rect(screen, comuni_zone.color, (comuni_zone.x, comuni_zone.y, comuni_zone.width, comuni_zone.height))
+        fascio_space = pygame.draw.rect(screen, fascio_zone.color, (fascio_zone.x, fascio_zone.y, fascio_zone.width, fascio_zone.height))
         comuni_rect = pygame.draw.rect(screen, player2_color, (comuni.x, comuni.y, 20, 20))
         fascio_rect = pygame.draw.rect(screen, player1_color, (fascio.x, fascio.y, 20, 20))
         screen.blit(text_timer, (10, 10))
@@ -149,6 +172,14 @@ while running:
             screen.blit(text_point, (10, 30))
 
         current_time = pygame.time.get_ticks()
+        fascio.speed = fascio.base_speed
+        comuni.speed = comuni.base_speed
+
+        if fascio_rect.colliderect(comuni_space):
+            fascio.speed = 0.1
+
+        if comuni_rect.colliderect(fascio_space):
+            comuni.speed = 0.1
 
         if seconds >= 60:
             fascio.point += 1
@@ -167,8 +198,8 @@ while running:
             seconds += 1
             for sec in speed_flags:
                 if seconds >= sec and not speed_flags[sec]:
-                    fascio.speed = speed_values[sec]
-                    comuni.speed = speed_values[sec]
+                    fascio.base_speed = speed_values[sec]
+                    comuni.base_speed = speed_values[sec]
                     try:
                         increment_speed_sound()
                     except RuntimeError:
